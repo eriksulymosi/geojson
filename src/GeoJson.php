@@ -24,8 +24,6 @@ abstract class GeoJson implements JsonSerializable, JsonUnserializable
 {
     protected ?BoundingBox $boundingBox = null;
 
-    protected ?CoordinateReferenceSystem $crs = null;
-
     protected GeoJsonType $type;
 
     /**
@@ -34,14 +32,6 @@ abstract class GeoJson implements JsonSerializable, JsonUnserializable
     public function getBoundingBox(): ?BoundingBox
     {
         return $this->boundingBox;
-    }
-
-    /**
-     * Return the CoordinateReferenceSystem for this GeoJson object.
-     */
-    public function getCrs(): ?CoordinateReferenceSystem
-    {
-        return $this->crs;
     }
 
     /**
@@ -55,10 +45,6 @@ abstract class GeoJson implements JsonSerializable, JsonUnserializable
     public function jsonSerialize(): array
     {
         $json = ['type' => $this->getType()];
-
-        if (isset($this->crs)) {
-            $json['crs'] = $this->crs->jsonSerialize();
-        }
 
         if (isset($this->boundingBox)) {
             $json['bbox'] = $this->boundingBox->jsonSerialize();
@@ -152,28 +138,20 @@ abstract class GeoJson implements JsonSerializable, JsonUnserializable
             $args[] = BoundingBox::jsonUnserialize($json['bbox']);
         }
 
-        if (isset($json['crs'])) {
-            $args[] = CoordinateReferenceSystem::jsonUnserialize($json['crs']);
-        }
-
         $class = sprintf('GeoJson\%s\%s', strncmp('Feature', $type->value, 7) === 0 ? 'Feature' : 'Geometry', $type->value);
 
         return new $class(... $args);
     }
 
     /**
-     * Set optional CRS and BoundingBox arguments passed to a constructor.
+     * Set optional BoundingBox arguments passed to a constructor.
      *
-     * @todo Decide if multiple CRS or BoundingBox instances should override a
+     * @todo Decide if multiple BoundingBox instances should override a
      *       previous value or be ignored
      */
     protected function setOptionalConstructorArgs(array $args): void
     {
         foreach ($args as $arg) {
-            if ($arg instanceof CoordinateReferenceSystem) {
-                $this->crs = $arg;
-            }
-
             if ($arg instanceof BoundingBox) {
                 $this->boundingBox = $arg;
             }

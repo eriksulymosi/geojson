@@ -42,38 +42,6 @@ test('unserialization with bounding box', function ($assoc) {
     ->with('provideJsonDecodeAssocOptions')
     ->group('functional');
 
-test('unserialization with crs', function ($assoc) {
-    $json = <<<'JSON'
-    {
-        "type": "Point",
-        "coordinates": [1, 1],
-        "crs": {
-            "type": "name",
-            "properties": {
-                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-            }
-        }
-    }
-    JSON;
-
-    $json = json_decode($json, $assoc);
-    /** @var Point */
-    $point = GeoJson::jsonUnserialize($json);
-
-    expect($point)->toBeInstanceOf(Point::class);
-    expect(GeoJsonType::from($point->getType()))->toBe(GeoJsonType::POINT);
-    expect($point->getCoordinates())->toBe([1, 1]);
-
-    $crs = $point->getCrs();
-
-    $expectedProperties = ['name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'];
-
-    expect($crs)->toBeInstanceOf(Named::class);
-    expect($crs->getType())->toBe('name');
-    expect($crs->getProperties())->toBe($expectedProperties);
-})
-    ->with('provideJsonDecodeAssocOptions')->group('functional');
-
 test('unserialization with unknown type', function () {
     GeoJson::jsonUnserialize(['type' => 'Unknown']);
 })
@@ -87,22 +55,20 @@ test('unserialization with missing type', function () {
     GeoJson::jsonUnserialize([]);
 });
 
-// test('unserialization with missing coordinates', function (string $type) {
-//     $this->expectException(UnserializationException::class);
-//     $this->expectExceptionMessage($type . ' expected "coordinates" property of type array, none given');
-
-//     GeoJson::jsonUnserialize([
-//         'type' => $type,
-//     ]);
-// })
-//     ->with([
-//         GeoJsonType::LINE_STRING => [GeoJsonType::LINE_STRING],
-//         GeoJsonType::MULTI_LINE_STRING => [GeoJsonType::MULTI_LINE_STRING],
-//         GeoJsonType::MULTI_POINT => [GeoJsonType::MULTI_POINT],
-//         GeoJsonType::MULTI_POLYGON => [GeoJsonType::MULTI_POLYGON],
-//         GeoJsonType::POINT => [GeoJsonType::POINT],
-//         GeoJsonType::POLYGON => [GeoJsonType::POLYGON],
-//     ]);
+test('unserialization with missing coordinates', function (GeoJsonType $type) {
+    expect(fn() => GeoJson::jsonUnserialize([
+        'type' => $type->value,
+    ]))
+        ->toThrow(UnserializationException::class, "{$type->value} expected \"coordinates\" property of type array, none given");
+})
+    ->with([
+        GeoJsonType::LINE_STRING->value => [GeoJsonType::LINE_STRING],
+        GeoJsonType::MULTI_LINE_STRING->value => [GeoJsonType::MULTI_LINE_STRING],
+        GeoJsonType::MULTI_POINT->value => [GeoJsonType::MULTI_POINT],
+        GeoJsonType::MULTI_POLYGON->value => [GeoJsonType::MULTI_POLYGON],
+        GeoJsonType::POINT->value => [GeoJsonType::POINT],
+        GeoJsonType::POLYGON->value => [GeoJsonType::POLYGON],
+    ]);
     
 test('unserialization with invalid coordinates', function ($value) {
     $valueType = is_object($value) ? get_class($value) : gettype($value);

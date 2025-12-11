@@ -9,7 +9,7 @@ use GeoJson\Exception\UnserializationException;
 /**
  * JsonUnserializable interface for creating an object from decoded JSON.
  *
- * This is used as a factory method for GeoJson, BoundingBox, and CRS classes.
+ * This is used as a factory method for GeoJson, BoundingBox classes.
  *
  * @since 1.0
  */

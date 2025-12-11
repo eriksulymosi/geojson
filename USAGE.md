@@ -39,20 +39,19 @@ array, and an identifier, all of which are optional.
 Feature and geometry collection objects are constructed from an array of their
 respective types.
 
-#### Specifying a Bounding Box or CRS
+#### Specifying a Bounding Box
 
 All GeoJson constructors support `BoundingBox` and `CoordinateReferenceSystem`
 objects as optional arguments beyond those explicitly listed in their prototype.
 These objects may appear in any order *after* the explicit arguments.
 
 ```php
-$crs = new \GeoJson\CoordinateReferenceSystem\Named('urn:ogc:def:crs:OGC:1.3:CRS84');
 $box = new \GeoJson\BoundingBox([-180, -90, 180, 90]);
-$point = new \GeoJson\Geometry\Point([0, 0], $crs, $box);
+$point = new \GeoJson\Geometry\Point([0, 0], $box);
 ```
 
 Note that the `Feature` class is unique in that it has three arguments, all with
-default values. In order to construct a `Feature` with a bounding box or CRS,
+default values. In order to construct a `Feature` with a bounding box,
 all three arguments must be explicitly listed (e.g. with `null` placeholders).
 
 ```php
@@ -97,4 +96,4 @@ will be thrown by `jsonUnserialize()`. Possible errors include:
 
  * Missing properties (e.g. `type` is not present)
  * Unexpected values (e.g. `coordinates` property is not an array)
- * Unsupported `type` string when parsing a GeoJson object or CRS
+ * Unsupported `type` string when parsing a GeoJson object

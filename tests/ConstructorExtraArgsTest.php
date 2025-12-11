@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\Feature\Feature;
 use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\GeometryCollection;
@@ -15,56 +14,30 @@ use GeoJson\Geometry\Point;
 use GeoJson\Geometry\Polygon;
 
 test(
-    'constructor should scan extra arguments for crs and bounding box',
+    'constructor should scan extra arguments for bounding box',
     function (callable $createSubjectWithExtraArguments) {
         $box = mock(BoundingBox::class);
-        $crs = mock(CoordinateReferenceSystem::class);
 
         $sut = $createSubjectWithExtraArguments();
         expect($sut->getBoundingBox())->toBeNull();
-        expect($sut->getCrs())->toBeNull();
 
         $sut = $createSubjectWithExtraArguments($box);
         expect($sut->getBoundingBox())->toBe($box);
-        expect($sut->getCrs())->toBeNull();
-
-        $sut = $createSubjectWithExtraArguments($crs);
-        expect($sut->getBoundingBox())->toBeNull();
-        expect($sut->getCrs())->toBe($crs);
-
-        $sut = $createSubjectWithExtraArguments($box, $crs);
-        expect($sut->getBoundingBox())->toBe($box);
-        expect($sut->getCrs())->toBe($crs);
-
-        $sut = $createSubjectWithExtraArguments($crs, $box);
-        expect($sut->getBoundingBox())->toBe($box);
-        expect($sut->getCrs())->toBe($crs);
-
-        // Not that you would, but you could…
-        $sut = $createSubjectWithExtraArguments(null, null, $box, $crs);
-        expect($sut->getBoundingBox())->toBe($box);
-        expect($sut->getCrs())->toBe($crs);
     }
 )
     ->with('createSubjectWithExtraArguments');
 
-test('serialization with crs and bounding box', function (callable $createSubjectWithExtraArguments) {
+test('serialization with bounding box', function (callable $createSubjectWithExtraArguments) {
     $box = mock(BoundingBox::class);
     $box->shouldReceive('jsonSerialize')
         ->andReturn(['boundingBox']);
 
-    $crs = mock(CoordinateReferenceSystem::class);
-    $crs->shouldReceive('jsonSerialize')
-        ->andReturn(['coordinateReferenceSystem']);
-    
-    $sut = $createSubjectWithExtraArguments($box, $crs);
+    $sut = $createSubjectWithExtraArguments($box);
 
     $json = $sut->jsonSerialize();
 
     expect($json)->toHaveKey('bbox');
-    expect($json)->toHaveKey('crs');
     expect($json['bbox'])->toBe(['boundingBox']);
-    expect($json['crs'])->toBe(['coordinateReferenceSystem']);
 })
     ->with('createSubjectWithExtraArguments');
 
