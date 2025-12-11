@@ -10,6 +10,7 @@ use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\Exception\InvalidArgumentException;
 use GeoJson\GeoJson;
+use GeoJson\GeoJsonType;
 use IteratorAggregate;
 use Traversable;
 
@@ -26,7 +27,7 @@ use function count;
  */
 class FeatureCollection extends GeoJson implements Countable, IteratorAggregate
 {
-    protected string $type = self::TYPE_FEATURE_COLLECTION;
+    protected GeoJsonType $type = GeoJsonType::FEATURE_COLLECTION;
 
     /**
      * @var array<Feature>

@@ -18,9 +18,7 @@ interface JsonUnserializable
     /**
      * Factory method for creating an object from a decoded JSON value.
      *
-     * @param mixed $json
-     * @return mixed
      * @throws UnserializationException
      */
-    public static function jsonUnserialize($json);
+    public static function jsonUnserialize(array|object $json): self;
 }

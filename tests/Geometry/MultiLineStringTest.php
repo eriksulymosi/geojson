@@ -1,98 +1,75 @@
 <?php
-
 declare(strict_types=1);
 
-namespace GeoJson\Tests\Geometry;
-
 use GeoJson\GeoJson;
+use GeoJson\GeoJsonType;
 use GeoJson\Geometry\Geometry;
 use GeoJson\Geometry\LineString;
 use GeoJson\Geometry\MultiLineString;
-use GeoJson\Tests\BaseGeoJsonTest;
 
-use function is_subclass_of;
-use function json_decode;
+test('is subclass of geometry')
+    ->expect(is_subclass_of(MultiLineString::class, Geometry::class))
+    ->toBeTrue();
 
-class MultiLineStringTest extends BaseGeoJsonTest
-{
-    public function createSubjectWithExtraArguments(...$extraArgs)
+test('construction from line string objects', function () {
+    $multiLineString1 = new MultiLineString([
+        new LineString([[1, 1], [2, 2]]),
+        new LineString([[3, 3], [4, 4]]),
+    ]);
+
+    $multiLineString2 = new MultiLineString([
+        [[1, 1], [2, 2]],
+        [[3, 3], [4, 4]],
+    ]);
+
+    expect($multiLineString2->getCoordinates())->toBe($multiLineString1->getCoordinates());
+});
+
+test('serialization', function () {
+    $coordinates = [
+        [[1, 1], [2, 2]],
+        [[3, 3], [4, 4]],
+    ];
+
+    $multiLineString = new MultiLineString($coordinates);
+
+    $expected = [
+        'type' => GeoJsonType::MULTI_LINE_STRING->value,
+        'coordinates' => $coordinates,
+    ];
+
+    expect(GeoJsonType::from($multiLineString->getType()))->toBe(GeoJsonType::MULTI_LINE_STRING);
+    expect($multiLineString->getCoordinates())->toBe($coordinates);
+    expect($multiLineString->jsonSerialize())->toBe($expected);
+});
+
+test('unserialization', function ($assoc) {
+    $json = <<<'JSON'
     {
-        return new MultiLineString([], ... $extraArgs);
+        "type": "MultiLineString",
+        "coordinates": [
+            [ [1, 1], [2, 2] ],
+            [ [3, 3], [4, 4] ]
+        ]
     }
+    JSON;
 
-    public function testIsSubclassOfGeometry(): void
-    {
-        $this->assertTrue(is_subclass_of(MultiLineString::class, Geometry::class));
-    }
+    $json = json_decode($json, $assoc);
+    
+    /** @var MultiLineString */
+    $multiLineString = GeoJson::jsonUnserialize($json);
 
-    public function testConstructionFromLineStringObjects(): void
-    {
-        $multiLineString1 = new MultiLineString([
-            new LineString([[1, 1], [2, 2]]),
-            new LineString([[3, 3], [4, 4]]),
-        ]);
+    $expectedCoordinates = [
+        [[1, 1], [2, 2]],
+        [[3, 3], [4, 4]],
+    ];
 
-        $multiLineString2 = new MultiLineString([
-            [[1, 1], [2, 2]],
-            [[3, 3], [4, 4]],
-        ]);
-
-        $this->assertSame($multiLineString1->getCoordinates(), $multiLineString2->getCoordinates());
-    }
-
-    public function testSerialization(): void
-    {
-        $coordinates = [
-            [[1, 1], [2, 2]],
-            [[3, 3], [4, 4]],
-        ];
-
-        $multiLineString = new MultiLineString($coordinates);
-
-        $expected = [
-            'type' => GeoJson::TYPE_MULTI_LINE_STRING,
-            'coordinates' => $coordinates,
-        ];
-
-        $this->assertSame(GeoJson::TYPE_MULTI_LINE_STRING, $multiLineString->getType());
-        $this->assertSame($coordinates, $multiLineString->getCoordinates());
-        $this->assertSame($expected, $multiLineString->jsonSerialize());
-    }
-
-    /**
-     * @dataProvider provideJsonDecodeAssocOptions
-     * @group functional
-     */
-    public function testUnserialization($assoc): void
-    {
-        $json = <<<'JSON'
-{
-    "type": "MultiLineString",
-    "coordinates": [
-        [ [1, 1], [2, 2] ],
-        [ [3, 3], [4, 4] ]
-    ]
-}
-JSON;
-
-        $json = json_decode($json, $assoc);
-        $multiLineString = GeoJson::jsonUnserialize($json);
-
-        $expectedCoordinates = [
-            [[1, 1], [2, 2]],
-            [[3, 3], [4, 4]],
-        ];
-
-        $this->assertInstanceOf(MultiLineString::class, $multiLineString);
-        $this->assertSame(GeoJson::TYPE_MULTI_LINE_STRING, $multiLineString->getType());
-        $this->assertSame($expectedCoordinates, $multiLineString->getCoordinates());
-    }
-
-    public function provideJsonDecodeAssocOptions()
-    {
-        return [
-            'assoc=true' => [true],
-            'assoc=false' => [false],
-        ];
-    }
-}
+    expect($multiLineString)->toBeInstanceOf(MultiLineString::class);
+    expect(GeoJsonType::from($multiLineString->getType()))->toBe(GeoJsonType::MULTI_LINE_STRING);
+    expect($multiLineString->getCoordinates())->toBe($expectedCoordinates);
+})
+    ->with([
+        'assoc=true' => [true],
+        'assoc=false' => [false],
+    ])
+    ->group('functional');

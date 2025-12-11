@@ -8,6 +8,7 @@ use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\Exception\InvalidArgumentException;
 
+use GeoJson\GeoJsonType;
 use function count;
 
 /**
@@ -20,7 +21,7 @@ use function count;
  */
 class LineString extends MultiPoint
 {
-    protected string $type = self::TYPE_LINE_STRING;
+    protected GeoJsonType $type = GeoJsonType::LINE_STRING;
 
     /**
      * @param array<Point|array<float|int>> $positions

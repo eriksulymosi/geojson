@@ -54,16 +54,13 @@ abstract class CoordinateReferenceSystem implements JsonSerializable, JsonUnseri
         ];
     }
 
-    /**
-     * @param array|object $json
-     */
-    final public static function jsonUnserialize($json): self
+    final public static function jsonUnserialize(array|object $json): self
     {
         if (! is_array($json) && ! is_object($json)) {
             throw UnserializationException::invalidValue('CRS', $json, 'array or object');
         }
 
-        $json = new ArrayObject($json);
+        $json = new ArrayObject((array) $json);
 
         if (! $json->offsetExists('type')) {
             throw UnserializationException::missingProperty('CRS', 'type', 'string');
@@ -76,15 +73,11 @@ abstract class CoordinateReferenceSystem implements JsonSerializable, JsonUnseri
         $type = (string) $json['type'];
         $properties = $json['properties'];
 
-        switch ($type) {
-            case 'link':
-                return Linked::jsonUnserializeFromProperties($properties);
-
-            case 'name':
-                return Named::jsonUnserializeFromProperties($properties);
-        }
-
-        throw UnserializationException::unsupportedType('CRS', $type);
+        return match ($type) {
+            'link' => Linked::jsonUnserializeFromProperties($properties),
+            'name' => Named::jsonUnserializeFromProperties($properties),
+            default => throw UnserializationException::unsupportedType('CRS', $type)
+        };
     }
 
     /**
@@ -96,7 +89,7 @@ abstract class CoordinateReferenceSystem implements JsonSerializable, JsonUnseri
      *
      * @throws BadMethodCallException
      */
-    protected static function jsonUnserializeFromProperties($properties): CoordinateReferenceSystem
+    protected static function jsonUnserializeFromProperties(array|object $properties): CoordinateReferenceSystem
     {
         throw new BadMethodCallException(sprintf('%s must be overridden in a child class', __METHOD__));
     }

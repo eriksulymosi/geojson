@@ -7,15 +7,15 @@ on:
 jobs:
   phpunit:
     name: PHPUnit Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-25.04
 
     strategy:
       matrix:
         php:
-          - "7.4"
-          - "8.0"
-          - "8.1"
           - "8.2"
+          - "8.3"
+          - "8.4"
+          - "8.5"
         dependency-versions:
           - "highest"
         include:
@@ -40,7 +40,3 @@ jobs:
 
         - name: Run PHPUnit
           run: "vendor/bin/phpunit --coverage-clover=coverage.clover"
-
-        - name: Upload Coverage
-          if: github.repository_owner == 'jmikola'
-          run: "vendor/bin/ocular code-coverage:upload --format=php-clover coverage.clover"

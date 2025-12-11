@@ -7,6 +7,7 @@ namespace GeoJson\Geometry;
 use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 
+use GeoJson\GeoJsonType;
 use function array_map;
 
 /**
@@ -19,7 +20,7 @@ use function array_map;
  */
 class MultiLineString extends Geometry
 {
-    protected string $type = self::TYPE_MULTI_LINE_STRING;
+    protected GeoJsonType $type = GeoJsonType::MULTI_LINE_STRING;
 
     /**
      * @param array<LineString|array<Point|array<int|float>>> $lineStrings

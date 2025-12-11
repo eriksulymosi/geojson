@@ -8,6 +8,7 @@ use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\Exception\InvalidArgumentException;
 
+use GeoJson\GeoJsonType;
 use function count;
 use function is_float;
 use function is_int;
@@ -22,7 +23,7 @@ use function is_int;
  */
 class Point extends Geometry
 {
-    protected string $type = self::TYPE_POINT;
+    protected GeoJsonType $type = GeoJsonType::POINT;
 
     /**
      * @param array<float|int> $position

@@ -1,91 +1,68 @@
 <?php
-
 declare(strict_types=1);
 
-namespace GeoJson\Tests\Geometry;
-
 use GeoJson\GeoJson;
+use GeoJson\GeoJsonType;
 use GeoJson\Geometry\Geometry;
 use GeoJson\Geometry\MultiPoint;
 use GeoJson\Geometry\Point;
-use GeoJson\Tests\BaseGeoJsonTest;
 
-use function is_subclass_of;
-use function json_decode;
+test('is subclass of geometry')
+    ->expect(is_subclass_of(MultiPoint::class, Geometry::class))
+    ->toBeTrue();
 
-class MultiPointTest extends BaseGeoJsonTest
-{
-    public function createSubjectWithExtraArguments(...$extraArgs)
-    {
-        return new MultiPoint([], ... $extraArgs);
-    }
+test('construction from point objects', function () {
+    $multiPoint1 = new MultiPoint([
+        new Point([1, 1]),
+        new Point([2, 2]),
+    ]);
 
-    public function testIsSubclassOfGeometry(): void
-    {
-        $this->assertTrue(is_subclass_of(MultiPoint::class, Geometry::class));
-    }
-
-    public function testConstructionFromPointObjects(): void
-    {
-        $multiPoint1 = new MultiPoint([
-            new Point([1, 1]),
-            new Point([2, 2]),
-        ]);
-
-        $multiPoint2 = new MultiPoint([
-            [1, 1],
-            [2, 2],
-        ]);
-
-        $this->assertSame($multiPoint1->getCoordinates(), $multiPoint2->getCoordinates());
-    }
-
-    public function testSerialization(): void
-    {
-        $coordinates = [[1, 1], [2, 2]];
-        $multiPoint = new MultiPoint($coordinates);
-
-        $expected = [
-            'type' => GeoJson::TYPE_MULTI_POINT,
-            'coordinates' => $coordinates,
-        ];
-
-        $this->assertSame(GeoJson::TYPE_MULTI_POINT, $multiPoint->getType());
-        $this->assertSame($coordinates, $multiPoint->getCoordinates());
-        $this->assertSame($expected, $multiPoint->jsonSerialize());
-    }
-
-    /**
-     * @dataProvider provideJsonDecodeAssocOptions
-     * @group functional
-     */
-    public function testUnserialization($assoc): void
-    {
-        $json = <<<'JSON'
-{
-    "type": "MultiPoint",
-    "coordinates": [
+    $multiPoint2 = new MultiPoint([
         [1, 1],
-        [2, 2]
-    ]
-}
-JSON;
+        [2, 2],
+    ]);
 
-        $json = json_decode($json, $assoc);
-        $multiPoint = GeoJson::jsonUnserialize($json);
+    expect($multiPoint2->getCoordinates())->toBe($multiPoint1->getCoordinates());
+});
 
-        $expectedCoordinates = [[1, 1], [2, 2]];
+test('serialization', function () {
+    $coordinates = [[1, 1], [2, 2]];
+    $multiPoint = new MultiPoint($coordinates);
 
-        $this->assertInstanceOf(MultiPoint::class, $multiPoint);
-        $this->assertSame(GeoJson::TYPE_MULTI_POINT, $multiPoint->getType());
-        $this->assertSame($expectedCoordinates, $multiPoint->getCoordinates());
-    }
+    $expected = [
+        'type' => GeoJsonType::MULTI_POINT->value,
+        'coordinates' => $coordinates,
+    ];
 
-    public function provideJsonDecodeAssocOptions()
+    expect(GeoJsonType::from($multiPoint->getType()))->toBe(GeoJsonType::MULTI_POINT);
+    expect($multiPoint->getCoordinates())->toBe($coordinates);
+    expect($multiPoint->jsonSerialize())->toBe($expected);
+});
+
+test('unserialization', function ($assoc) {
+    $json = <<<'JSON'
     {
-        return [
-            'assoc=true' => [true],
-            'assoc=false' => [false],
-        ];
+        "type": "MultiPoint",
+        "coordinates": [
+            [1, 1],
+            [2, 2]
+        ]
     }
-}
+    JSON;
+
+    $json = json_decode($json, $assoc);
+    
+    /** @var MultiPoint */
+    $multiPoint = GeoJson::jsonUnserialize($json);
+
+    $expectedCoordinates = [[1, 1], [2, 2]];
+
+    expect($multiPoint)->toBeInstanceOf(MultiPoint::class);
+    expect(GeoJsonType::from($multiPoint->getType()))->toBe(GeoJsonType::MULTI_POINT);
+    expect($multiPoint->getCoordinates())->toBe($expectedCoordinates);
+})
+    ->with([
+        'assoc=true' => [true],
+        'assoc=false' => [false],
+    ])
+    ->group('functional');

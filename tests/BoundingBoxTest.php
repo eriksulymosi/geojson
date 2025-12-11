@@ -1,124 +1,84 @@
 <?php
-
 declare(strict_types=1);
-
-namespace GeoJson\Tests;
 
 use GeoJson\BoundingBox;
 use GeoJson\Exception\InvalidArgumentException;
 use GeoJson\Exception\UnserializationException;
 use GeoJson\JsonUnserializable;
-use PHPUnit\Framework\TestCase;
-use stdClass;
 
-use function func_get_args;
-use function json_decode;
+test('is json serializable', function () {
+    expect(new BoundingBox([0, 0, 1, 1]))->toBeInstanceOf('JsonSerializable');
+});
 
-class BoundingBoxTest extends TestCase
-{
-    public function testIsJsonSerializable(): void
-    {
-        $this->assertInstanceOf('JsonSerializable', new BoundingBox([0, 0, 1, 1]));
-    }
+test('is json unserializable', function () {
+    expect(new BoundingBox([0, 0, 1, 1]))->toBeInstanceOf(JsonUnserializable::class);
+});
 
-    public function testIsJsonUnserializable(): void
-    {
-        $this->assertInstanceOf(JsonUnserializable::class, new BoundingBox([0, 0, 1, 1]));
-    }
+test('constructor should require at least four values', function () {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage('BoundingBox requires at least four values');
 
-    public function testConstructorShouldRequireAtLeastFourValues(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('BoundingBox requires at least four values');
+    new BoundingBox([0, 0]);
+});
 
-        new BoundingBox([0, 0]);
-    }
+test('constructor should require an even number of values', function () {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage('BoundingBox requires an even number of values');
 
-    public function testConstructorShouldRequireAnEvenNumberOfValues(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('BoundingBox requires an even number of values');
+    new BoundingBox([0, 0, 1, 1, 2]);
+});
 
-        new BoundingBox([0, 0, 1, 1, 2]);
-    }
+test('constructor should require integer or float values', function () {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage('BoundingBox values must be integers or floats');
+    new BoundingBox(func_get_args());
+})
+    ->with([
+        'strings' => ['0', '0.0', '1', '1.0'],
+        'objects' => [new stdClass(), new stdClass(), new stdClass(), new stdClass()],
+        'arrays' => [[], [], [], []],
+    ]);
 
-    /**
-     * @dataProvider provideBoundsWithInvalidTypes
-     */
-    public function testConstructorShouldRequireIntegerOrFloatValues(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('BoundingBox values must be integers or floats');
-        new BoundingBox(func_get_args());
-    }
+test('constructor should require min before max values', function () {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage('BoundingBox min values must precede max values');
 
-    public function provideBoundsWithInvalidTypes()
-    {
-        return [
-            'strings' => ['0', '0.0', '1', '1.0'],
-            'objects' => [new stdClass(), new stdClass(), new stdClass(), new stdClass()],
-            'arrays' => [[], [], [], []],
-        ];
-    }
+    new BoundingBox([-90.0, -95.0, -92.5, 90.0]);
+});
 
-    public function testConstructorShouldRequireMinBeforeMaxValues(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('BoundingBox min values must precede max values');
+test('serialization', function () {
+    $bounds = [-180.0, -90.0, 0.0, 180.0, 90.0, 100.0];
+    $boundingBox = new BoundingBox($bounds);
 
-        new BoundingBox([-90.0, -95.0, -92.5, 90.0]);
-    }
+    expect($boundingBox->getBounds())->toBe($bounds);
+    expect($boundingBox->jsonSerialize())->toBe($bounds);
+});
 
-    public function testSerialization(): void
-    {
-        $bounds = [-180.0, -90.0, 0.0, 180.0, 90.0, 100.0];
-        $boundingBox = new BoundingBox($bounds);
+test('unserialization', function ($assoc) {
+    $json = '[-180.0, -90.0, 180.0, 90.0]';
 
-        $this->assertSame($bounds, $boundingBox->getBounds());
-        $this->assertSame($bounds, $boundingBox->jsonSerialize());
-    }
+    $json = json_decode($json, $assoc);
+    $boundingBox = BoundingBox::jsonUnserialize($json);
 
-    /**
-     * @dataProvider provideJsonDecodeAssocOptions
-     * @group functional
-     */
-    public function testUnserialization($assoc): void
-    {
-        $json = '[-180.0, -90.0, 180.0, 90.0]';
+    expect($boundingBox)->toBeInstanceOf(BoundingBox::class);
+    expect($boundingBox->getBounds())->toBe([-180.0, -90.0, 180.0, 90.0]);
+})
+    ->with([
+        'assoc=true' => [true],
+        'assoc=false' => [false],
+    ])
+    ->group('functional');
 
-        $json = json_decode($json, $assoc);
-        $boundingBox = BoundingBox::jsonUnserialize($json);
+test('unserialization should require array', function ($value) {
+    $this->expectException(UnserializationException::class);
+    $this->expectExceptionMessage('BoundingBox expected value of type array');
 
-        $this->assertInstanceOf(BoundingBox::class, $boundingBox);
-        $this->assertSame([-180.0, -90.0, 180.0, 90.0], $boundingBox->getBounds());
-    }
+    BoundingBox::jsonUnserialize($value);
+})
+    ->with([
+        [null],
+        [1],
+        ['foo'],
+        [new stdClass()],
+    ]);
 
-    public function provideJsonDecodeAssocOptions()
-    {
-        return [
-            'assoc=true' => [true],
-            'assoc=false' => [false],
-        ];
-    }
-
-    /**
-     * @dataProvider provideInvalidUnserializationValues
-     */
-    public function testUnserializationShouldRequireArray($value): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('BoundingBox expected value of type array');
-
-        BoundingBox::jsonUnserialize($value);
-    }
-
-    public function provideInvalidUnserializationValues()
-    {
-        return [
-            [null],
-            [1],
-            ['foo'],
-            [new stdClass()],
-        ];
-    }
-}

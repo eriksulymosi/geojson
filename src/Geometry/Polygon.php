@@ -6,6 +6,7 @@ namespace GeoJson\Geometry;
 
 use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
+use GeoJson\GeoJsonType;
 
 /**
  * Polygon geometry object.
@@ -17,7 +18,7 @@ use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
  */
 class Polygon extends Geometry
 {
-    protected string $type = self::TYPE_POLYGON;
+    protected GeoJsonType $type = GeoJsonType::POLYGON;
 
     /**
      * @param array<LinearRing|array<Point|array<int|float>>> $linearRings

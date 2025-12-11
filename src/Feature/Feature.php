@@ -7,6 +7,7 @@ namespace GeoJson\Feature;
 use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\GeoJson;
+use GeoJson\GeoJsonType;
 use GeoJson\Geometry\Geometry;
 use stdClass;
 
@@ -18,7 +19,7 @@ use stdClass;
  */
 class Feature extends GeoJson
 {
-    protected string $type = self::TYPE_FEATURE;
+    protected GeoJsonType $type = GeoJsonType::FEATURE;
 
     protected ?Geometry $geometry;
 

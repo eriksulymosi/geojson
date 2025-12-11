@@ -1,87 +1,61 @@
 <?php
-
 declare(strict_types=1);
-
-namespace GeoJson\Tests\Geometry;
 
 use GeoJson\Exception\InvalidArgumentException;
 use GeoJson\GeoJson;
+use GeoJson\GeoJsonType;
 use GeoJson\Geometry\LineString;
 use GeoJson\Geometry\MultiPoint;
-use GeoJson\Tests\BaseGeoJsonTest;
 
-use function is_subclass_of;
-use function json_decode;
+test('is subclass of multi point', function () {
+    expect(is_subclass_of(LineString::class, MultiPoint::class))->toBeTrue();
+});
 
-class LineStringTest extends BaseGeoJsonTest
-{
-    public function createSubjectWithExtraArguments(...$extraArgs)
+test('constructor should require at least two positions', function () {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage('LineString requires at least two positions');
+
+    new LineString([[1, 1]]);
+});
+
+test('serialization', function () {
+    $coordinates = [[1, 1], [2, 2]];
+    $lineString = new LineString($coordinates);
+
+    $expected = [
+        'type' => GeoJsonType::LINE_STRING->value,
+        'coordinates' => $coordinates,
+    ];
+
+    expect(GeoJsonType::from($lineString->getType()))->toBe(GeoJsonType::LINE_STRING);
+    expect($lineString->getCoordinates())->toBe($coordinates);
+    expect($lineString->jsonSerialize())->toBe($expected);
+});
+
+test('unserialization', function ($assoc) {
+    $json = <<<'JSON'
     {
-        return new LineString(
-            [[1, 1], [2, 2]],
-            ... $extraArgs
-        );
+        "type": "LineString",
+        "coordinates": [
+            [1, 1],
+            [2, 2]
+        ]
     }
+    JSON;
 
-    public function testIsSubclassOfMultiPoint(): void
-    {
-        $this->assertTrue(is_subclass_of(LineString::class, MultiPoint::class));
-    }
+    $json = json_decode($json, $assoc);
+    
+    /** @var LineString */
+    $lineString = GeoJson::jsonUnserialize($json);
 
-    public function testConstructorShouldRequireAtLeastTwoPositions(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('LineString requires at least two positions');
+    $expectedCoordinates = [[1, 1], [2, 2]];
 
-        new LineString([[1, 1]]);
-    }
-
-    public function testSerialization(): void
-    {
-        $coordinates = [[1, 1], [2, 2]];
-        $lineString = new LineString($coordinates);
-
-        $expected = [
-            'type' => GeoJson::TYPE_LINE_STRING,
-            'coordinates' => $coordinates,
-        ];
-
-        $this->assertSame(GeoJson::TYPE_LINE_STRING, $lineString->getType());
-        $this->assertSame($coordinates, $lineString->getCoordinates());
-        $this->assertSame($expected, $lineString->jsonSerialize());
-    }
-
-    /**
-     * @dataProvider provideJsonDecodeAssocOptions
-     * @group functional
-     */
-    public function testUnserialization($assoc): void
-    {
-        $json = <<<'JSON'
-{
-    "type": "LineString",
-    "coordinates": [
-        [1, 1],
-        [2, 2]
-    ]
-}
-JSON;
-
-        $json = json_decode($json, $assoc);
-        $lineString = GeoJson::jsonUnserialize($json);
-
-        $expectedCoordinates = [[1, 1], [2, 2]];
-
-        $this->assertInstanceOf(LineString::class, $lineString);
-        $this->assertSame(GeoJson::TYPE_LINE_STRING, $lineString->getType());
-        $this->assertSame($expectedCoordinates, $lineString->getCoordinates());
-    }
-
-    public function provideJsonDecodeAssocOptions()
-    {
-        return [
-            'assoc=true' => [true],
-            'assoc=false' => [false],
-        ];
-    }
-}
+    expect($lineString)->toBeInstanceOf(LineString::class);
+    expect(GeoJsonType::from($lineString->getType()))->toBe(GeoJsonType::LINE_STRING);
+    expect($lineString->getCoordinates())->toBe($expectedCoordinates);
+})
+    ->with([
+        'assoc=true' => [true],
+        'assoc=false' => [false],
+    ])
+    ->group('functional');

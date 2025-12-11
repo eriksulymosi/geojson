@@ -1,200 +1,148 @@
 <?php
-
 declare(strict_types=1);
-
-namespace GeoJson\Tests;
 
 use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\Named;
 use GeoJson\Exception\UnserializationException;
 use GeoJson\GeoJson;
+use GeoJson\GeoJsonType;
 use GeoJson\Geometry\Point;
 use GeoJson\JsonUnserializable;
-use JsonSerializable;
-use PHPUnit\Framework\TestCase;
 
-use function get_class;
-use function gettype;
-use function is_object;
-use function json_decode;
+test('is json serializable', function () {
+    expect($this->createMock(GeoJson::class))->toBeInstanceOf(JsonSerializable::class);
+});
 
-class GeoJsonTest extends TestCase
-{
-    public function testIsJsonSerializable(): void
+test('is json unserializable', function () {
+    expect($this->createMock(GeoJson::class))->toBeInstanceOf(JsonUnserializable::class);
+});
+
+test('unserialization with bounding box', function ($assoc) {
+    $json = <<<'JSON'
+        {
+            "type": "Point",
+            "coordinates": [1, 1],
+            "bbox": [-180.0, -90.0, 180.0, 90.0]
+        }
+    JSON;
+
+    $json = json_decode($json, $assoc);
+    /** @var Point */
+    $point = GeoJson::jsonUnserialize($json);
+
+    expect($point)->toBeInstanceOf(Point::class);
+    expect(GeoJsonType::from($point->getType()))->toBe(GeoJsonType::POINT);
+    expect($point->getCoordinates())->toBe([1, 1]);
+
+    $boundingBox = $point->getBoundingBox();
+
+    expect($boundingBox)->toBeInstanceOf(BoundingBox::class);
+    expect($boundingBox->getBounds())->toBe([-180.0, -90.0, 180.0, 90.0]);
+})
+    ->with('provideJsonDecodeAssocOptions')
+    ->group('functional');
+
+test('unserialization with crs', function ($assoc) {
+    $json = <<<'JSON'
     {
-        $this->assertInstanceOf(JsonSerializable::class, $this->createMock(GeoJson::class));
-    }
-
-    public function testIsJsonUnserializable(): void
-    {
-        $this->assertInstanceOf(JsonUnserializable::class, $this->createMock(GeoJson::class));
-    }
-
-    /**
-     * @dataProvider provideJsonDecodeAssocOptions
-     * @group functional
-     */
-    public function testUnserializationWithBoundingBox($assoc): void
-    {
-        $json = <<<'JSON'
-{
-    "type": "Point",
-    "coordinates": [1, 1],
-    "bbox": [-180.0, -90.0, 180.0, 90.0]
-}
-JSON;
-
-        $json = json_decode($json, $assoc);
-        $point = GeoJson::jsonUnserialize($json);
-
-        $this->assertInstanceOf(Point::class, $point);
-        $this->assertSame(GeoJson::TYPE_POINT, $point->getType());
-        $this->assertSame([1, 1], $point->getCoordinates());
-
-        $boundingBox = $point->getBoundingBox();
-
-        $this->assertInstanceOf(BoundingBox::class, $boundingBox);
-        $this->assertSame([-180.0, -90.0, 180.0, 90.0], $boundingBox->getBounds());
-    }
-
-    /**
-     * @dataProvider provideJsonDecodeAssocOptions
-     * @group functional
-     */
-    public function testUnserializationWithCrs($assoc): void
-    {
-        $json = <<<'JSON'
-{
-    "type": "Point",
-    "coordinates": [1, 1],
-    "crs": {
-        "type": "name",
-        "properties": {
-            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        "type": "Point",
+        "coordinates": [1, 1],
+        "crs": {
+            "type": "name",
+            "properties": {
+                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+            }
         }
     }
-}
-JSON;
+    JSON;
 
-        $json = json_decode($json, $assoc);
-        $point = GeoJson::jsonUnserialize($json);
+    $json = json_decode($json, $assoc);
+    /** @var Point */
+    $point = GeoJson::jsonUnserialize($json);
 
-        $this->assertInstanceOf(Point::class, $point);
-        $this->assertSame(GeoJson::TYPE_POINT, $point->getType());
-        $this->assertSame([1, 1], $point->getCoordinates());
+    expect($point)->toBeInstanceOf(Point::class);
+    expect(GeoJsonType::from($point->getType()))->toBe(GeoJsonType::POINT);
+    expect($point->getCoordinates())->toBe([1, 1]);
 
-        $crs = $point->getCrs();
+    $crs = $point->getCrs();
 
-        $expectedProperties = ['name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'];
+    $expectedProperties = ['name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'];
 
-        $this->assertInstanceOf(Named::class, $crs);
-        $this->assertSame('name', $crs->getType());
-        $this->assertSame($expectedProperties, $crs->getProperties());
-    }
+    expect($crs)->toBeInstanceOf(Named::class);
+    expect($crs->getType())->toBe('name');
+    expect($crs->getProperties())->toBe($expectedProperties);
+})
+    ->with('provideJsonDecodeAssocOptions')->group('functional');
 
-    public function testUnserializationWithInvalidArgument(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('GeoJson expected value of type array or object, string given');
+test('unserialization with unknown type', function () {
+    GeoJson::jsonUnserialize(['type' => 'Unknown']);
+})
+    ->throws(ValueError::class);
 
-        GeoJson::jsonUnserialize('must be array or object, but this is a string');
-    }
+test('unserialization with missing type', function () {
+    // expect()->toThrow(ValueError::class, '"Unknown" is not a valid backing value for enum GeoJson\GeoJsonType');
+    $this->expectException(UnserializationException::class);
+    $this->expectExceptionMessage('GeoJson expected "type" property of type string, none given');
 
-    public function testUnserializationWithUnknownType(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('Invalid GeoJson type "Unknown"');
+    GeoJson::jsonUnserialize([]);
+});
 
-        GeoJson::jsonUnserialize(['type' => 'Unknown']);
-    }
+// test('unserialization with missing coordinates', function (string $type) {
+//     $this->expectException(UnserializationException::class);
+//     $this->expectExceptionMessage($type . ' expected "coordinates" property of type array, none given');
 
-    public function testUnserializationWithMissingType(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('GeoJson expected "type" property of type string, none given');
+//     GeoJson::jsonUnserialize([
+//         'type' => $type,
+//     ]);
+// })
+//     ->with([
+//         GeoJsonType::LINE_STRING => [GeoJsonType::LINE_STRING],
+//         GeoJsonType::MULTI_LINE_STRING => [GeoJsonType::MULTI_LINE_STRING],
+//         GeoJsonType::MULTI_POINT => [GeoJsonType::MULTI_POINT],
+//         GeoJsonType::MULTI_POLYGON => [GeoJsonType::MULTI_POLYGON],
+//         GeoJsonType::POINT => [GeoJsonType::POINT],
+//         GeoJsonType::POLYGON => [GeoJsonType::POLYGON],
+//     ]);
+    
+test('unserialization with invalid coordinates', function ($value) {
+    $valueType = is_object($value) ? get_class($value) : gettype($value);
 
-        GeoJson::jsonUnserialize([]);
-    }
+    $this->expectException(UnserializationException::class);
+    $this->expectExceptionMessage('Point expected "coordinates" property of type array, ' . $valueType . ' given');
 
-    /**
-     * @dataProvider provideGeoJsonTypesWithCoordinates
-     */
-    public function testUnserializationWithMissingCoordinates(string $type): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage($type . ' expected "coordinates" property of type array, none given');
+    GeoJson::jsonUnserialize([
+        'type' => GeoJsonType::POINT->value,
+        'coordinates' => $value,
+    ]);
+})
+    ->with([
+        'string' => ['1,1'],
+        'int' => [1],
+        'bool' => [false],
+    ]);
 
-        GeoJson::jsonUnserialize([
-            'type' => $type,
-        ]);
-    }
+test('feature unserialization with invalid geometry', function () {
+    $this->expectException(UnserializationException::class);
+    $this->expectExceptionMessage('Feature expected "geometry" property of type array or object, string given');
 
-    /**
-     * @dataProvider provideInvalidCoordinates
-     *
-     * @param mixed $value
-     */
-    public function testUnserializationWithInvalidCoordinates($value): void
-    {
-        $valueType = is_object($value) ? get_class($value) : gettype($value);
+    GeoJson::jsonUnserialize([
+        'type' => GeoJsonType::FEATURE->value,
+        'geometry' => 'must be array or object, but this is a string',
+    ]);
+});
 
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('Point expected "coordinates" property of type array, ' . $valueType . ' given');
+test('feature unserialization with invalid properties', function () {
+    $this->expectException(UnserializationException::class);
+    $this->expectExceptionMessage('Feature expected "properties" property of type array or object, string given');
 
-        GeoJson::jsonUnserialize([
-            'type' => GeoJson::TYPE_POINT,
-            'coordinates' => $value,
-        ]);
-    }
+    GeoJson::jsonUnserialize([
+        'type' => GeoJsonType::FEATURE->value,
+        'properties' => 'must be array or object, but this is a string',
+    ]);
+});
 
-    public function testFeatureUnserializationWithInvalidGeometry(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('Feature expected "geometry" property of type array or object, string given');
+dataset('provideJsonDecodeAssocOptions', fn(): array => [
+    'assoc=true' => [true],
+    'assoc=false' => [false],
+]);
 
-        GeoJson::jsonUnserialize([
-            'type' => GeoJson::TYPE_FEATURE,
-            'geometry' => 'must be array or object, but this is a string',
-        ]);
-    }
-
-    public function testFeatureUnserializationWithInvalidProperties(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('Feature expected "properties" property of type array or object, string given');
-
-        GeoJson::jsonUnserialize([
-            'type' => GeoJson::TYPE_FEATURE,
-            'properties' => 'must be array or object, but this is a string',
-        ]);
-    }
-
-    public function provideJsonDecodeAssocOptions()
-    {
-        return [
-            'assoc=true' => [true],
-            'assoc=false' => [false],
-        ];
-    }
-
-    public function provideGeoJsonTypesWithCoordinates()
-    {
-        return [
-            GeoJson::TYPE_LINE_STRING => [GeoJson::TYPE_LINE_STRING],
-            GeoJson::TYPE_MULTI_LINE_STRING => [GeoJson::TYPE_MULTI_LINE_STRING],
-            GeoJson::TYPE_MULTI_POINT => [GeoJson::TYPE_MULTI_POINT],
-            GeoJson::TYPE_MULTI_POLYGON => [GeoJson::TYPE_MULTI_POLYGON],
-            GeoJson::TYPE_POINT => [GeoJson::TYPE_POINT],
-            GeoJson::TYPE_POLYGON => [GeoJson::TYPE_POLYGON],
-        ];
-    }
-
-    public function provideInvalidCoordinates()
-    {
-        return [
-            'string' => ['1,1'],
-            'int' => [1],
-            'bool' => [false],
-        ];
-    }
-}

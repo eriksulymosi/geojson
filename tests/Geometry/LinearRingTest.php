@@ -1,83 +1,63 @@
 <?php
-
 declare(strict_types=1);
 
-namespace GeoJson\Tests\Geometry;
-
 use GeoJson\Exception\InvalidArgumentException;
-use GeoJson\GeoJson;
-use GeoJson\Geometry\LinearRing;
+use GeoJson\GeoJsonType;
 use GeoJson\Geometry\LineString;
+use GeoJson\Geometry\LinearRing;
 use GeoJson\Geometry\Point;
-use GeoJson\Tests\BaseGeoJsonTest;
 
-use function is_subclass_of;
+test('is subclass of line string')
+    ->expect(is_subclass_of(LinearRing::class, LineString::class))
+    ->toBeTrue();
 
-class LinearRingTest extends BaseGeoJsonTest
-{
-    public function createSubjectWithExtraArguments(...$extraArgs)
-    {
-        return new LinearRing(
-            [[1, 1], [2, 2], [3, 3], [1, 1]],
-            ... $extraArgs
-        );
-    }
+test('constructor should require at least four positions', function () {
+    new LinearRing([
+        [1, 1],
+        [2, 2],
+        [3, 3],
+    ]);
+})
+    ->throws(InvalidArgumentException::class, 'LinearRing requires at least four positions');
 
-    public function testIsSubclassOfLineString(): void
-    {
-        $this->assertTrue(is_subclass_of(LinearRing::class, LineString::class));
-    }
+test('constructor should require equivalent first and last positions', function () {
+    new LinearRing([
+        [1, 1],
+        [2, 2],
+        [3, 3],
+        [4, 4],
+    ]);
+})
+    ->throws(InvalidArgumentException::class, 'LinearRing requires the first and last positions to be equivalent');
 
-    public function testConstructorShouldRequireAtLeastFourPositions(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('LinearRing requires at least four positions');
+test('constructor should accept equivalent point objects and position arrays', function () {
+    $linearRing1 = new LinearRing([
+        new Point([1, 1]),
+        new Point([2, 2]),
+        new Point([3, 3]),
+        new Point([1, 1]),
+    ]);
 
-        new LinearRing([
-            [1, 1],
-            [2, 2],
-            [3, 3],
-        ]);
-    }
+    $linearRing2 = new LinearRing([
+        [1, 1],
+        [2, 2],
+        [3, 3],
+        [1, 1],
+    ]);
 
-    public function testConstructorShouldRequireEquivalentFirstAndLastPositions(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('LinearRing requires the first and last positions to be equivalent');
+    expect($linearRing1->getCoordinates())->toBe($linearRing2->getCoordinates());
+});
 
-        new LinearRing([
-            [1, 1],
-            [2, 2],
-            [3, 3],
-            [4, 4],
-        ]);
-    }
+test('serialization', function () {
+    $coordinates = [[1, 1], [2, 2], [3, 3], [1, 1]];
+    $linearRing = new LinearRing($coordinates);
 
-    /**
-     * @doesNotPerformAssertions
-     */
-    public function testConstructorShouldAcceptEquivalentPointObjectsAndPositionArrays(): void
-    {
-        new LinearRing([
-            [1, 1],
-            [2, 2],
-            [3, 3],
-            new Point([1, 1]),
-        ]);
-    }
+    $expected = [
+        'type' => GeoJsonType::LINE_STRING->value,
+        'coordinates' => $coordinates,
+    ];
 
-    public function testSerialization(): void
-    {
-        $coordinates = [[1, 1], [2, 2], [3, 3], [1, 1]];
-        $linearRing = new LinearRing($coordinates);
-
-        $expected = [
-            'type' => GeoJson::TYPE_LINE_STRING,
-            'coordinates' => $coordinates,
-        ];
-
-        $this->assertSame(GeoJson::TYPE_LINE_STRING, $linearRing->getType());
-        $this->assertSame($coordinates, $linearRing->getCoordinates());
-        $this->assertSame($expected, $linearRing->jsonSerialize());
-    }
-}
+    expect(GeoJsonType::from($linearRing->getType()))->toBe(GeoJsonType::LINE_STRING);
+    expect($linearRing->getCoordinates())->toBe($coordinates);
+    expect($linearRing->jsonSerialize())->toBe($expected);
+});

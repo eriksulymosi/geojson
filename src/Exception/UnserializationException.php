@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeoJson\Exception;
 
+use GeoJson\GeoJsonType;
 use RuntimeException;
 
 use function get_class;
@@ -19,7 +20,7 @@ class UnserializationException extends RuntimeException implements Exception
      *
      * @param mixed $value
      */
-    public static function invalidValue(string $context, $value, string $expectedType): self
+    public static function invalidValue(GeoJsonType|string $context, $value, string $expectedType): self
     {
         return new self(sprintf(
             '%s expected value of type %s, %s given',
@@ -34,7 +35,7 @@ class UnserializationException extends RuntimeException implements Exception
      *
      * @param mixed $value
      */
-    public static function invalidProperty(string $context, string $property, $value, string $expectedType): self
+    public static function invalidProperty(GeoJsonType|string $context, string $property, $value, string $expectedType): self
     {
         return new self(sprintf(
             '%s expected "%s" property of type %s, %s given',
@@ -48,7 +49,7 @@ class UnserializationException extends RuntimeException implements Exception
     /**
      * Creates an UnserializationException for a missing property.
      */
-    public static function missingProperty(string $context, string $property, string $expectedType): self
+    public static function missingProperty(GeoJsonType|string $context, string $property, string $expectedType): self
     {
         return new self(sprintf(
             '%s expected "%s" property of type %s, none given',
@@ -61,7 +62,7 @@ class UnserializationException extends RuntimeException implements Exception
     /**
      * Creates an UnserializationException for an unsupported "type" property.
      */
-    public static function unsupportedType(string $context, string $value): self
+    public static function unsupportedType(GeoJsonType|string $context, string $value): self
     {
         return new self(sprintf('Invalid %s type "%s"', $context, $value));
     }

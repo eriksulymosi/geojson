@@ -1,62 +1,29 @@
 <?php
-
 declare(strict_types=1);
-
-namespace GeoJson\Tests\CoordinateReferenceSystem;
 
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\Exception\UnserializationException;
 use GeoJson\JsonUnserializable;
-use JsonSerializable;
-use PHPUnit\Framework\TestCase;
 
-class CoordinateReferenceSystemTest extends TestCase
-{
-    public function testIsJsonSerializable(): void
-    {
-        $this->assertInstanceOf(
-            JsonSerializable::class,
-            $this->createMock(CoordinateReferenceSystem::class)
-        );
-    }
+test('is json serializable')
+    ->expect(mock(CoordinateReferenceSystem::class))
+    ->toBeInstanceOf(JsonSerializable::class);
 
-    public function testIsJsonUnserializable(): void
-    {
-        $this->assertInstanceOf(
-            JsonUnserializable::class,
-            $this->createMock(CoordinateReferenceSystem::class)
-        );
-    }
+test('is json unserializable')
+    ->expect(mock(CoordinateReferenceSystem::class))
+    ->toBeInstanceOf(JsonUnserializable::class);
 
-    public function testUnserializationShouldRequireArrayOrObject(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('CRS expected value of type array or object');
+test('unserialization should require type field', function () {
+    CoordinateReferenceSystem::jsonUnserialize(['properties' => []]);
+})
+    ->throws(UnserializationException::class, 'CRS expected "type" property of type string, none given');
 
-        CoordinateReferenceSystem::jsonUnserialize(null);
-    }
+test('unserialization should require properties field', function () {
+    CoordinateReferenceSystem::jsonUnserialize(['type' => 'foo']);
+})
+    ->throws(UnserializationException::class, 'CRS expected "properties" property of type array or object, none given');
 
-    public function testUnserializationShouldRequireTypeField(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('CRS expected "type" property of type string, none given');
-
-        CoordinateReferenceSystem::jsonUnserialize(['properties' => []]);
-    }
-
-    public function testUnserializationShouldRequirePropertiesField(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('CRS expected "properties" property of type array or object, none given');
-
-        CoordinateReferenceSystem::jsonUnserialize(['type' => 'foo']);
-    }
-
-    public function testUnserializationShouldRequireValidType(): void
-    {
-        $this->expectException(UnserializationException::class);
-        $this->expectExceptionMessage('Invalid CRS type "foo"');
-
-        CoordinateReferenceSystem::jsonUnserialize(['type' => 'foo', 'properties' => []]);
-    }
-}
+test('unserialization should require valid type', function () {
+    CoordinateReferenceSystem::jsonUnserialize(['type' => 'foo', 'properties' => []]);
+})
+    ->throws(UnserializationException::class, 'Invalid CRS type "foo"');

@@ -7,6 +7,7 @@ namespace GeoJson\Geometry;
 use GeoJson\BoundingBox;
 use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 
+use GeoJson\GeoJsonType;
 use function array_map;
 
 /**
@@ -19,7 +20,7 @@ use function array_map;
  */
 class MultiPolygon extends Geometry
 {
-    protected string $type = self::TYPE_MULTI_POLYGON;
+    protected GeoJsonType $type = GeoJsonType::MULTI_POLYGON;
 
     /**
      * @param array<Polygon|array<LinearRing|array<Point|array<int|float>>>> $polygons

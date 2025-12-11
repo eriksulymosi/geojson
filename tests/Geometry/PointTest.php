@@ -1,108 +1,74 @@
 <?php
-
 declare(strict_types=1);
-
-namespace GeoJson\Tests\Geometry;
 
 use GeoJson\Exception\InvalidArgumentException;
 use GeoJson\GeoJson;
+use GeoJson\GeoJsonType;
 use GeoJson\Geometry\Geometry;
 use GeoJson\Geometry\Point;
-use GeoJson\Tests\BaseGeoJsonTest;
-use stdClass;
 
-use function func_get_args;
-use function is_subclass_of;
-use function json_decode;
+test('is subclass of geometry')
+    ->expect(is_subclass_of(Point::class, Geometry::class))
+    ->toBeTrue();
 
-class PointTest extends BaseGeoJsonTest
-{
-    public function createSubjectWithExtraArguments(...$extraArgs)
+test('constructor should require at least two elements in position', function () {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage('Position requires at least two elements');
+
+    new Point([1]);
+});
+
+test('constructor should require integer or float elements in position', function () {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage('Position elements must be integers or floats');
+
+    new Point(func_get_args());
+})
+    ->with([
+        'strings' => ['1.0', '2'],
+        'objects' => [new stdClass(), new stdClass()],
+        'arrays' => [[], []],
+    ]);
+
+test('constructor should allow more than two elements in aposition', function () {
+    $point = new Point([1, 2, 3, 4]);
+
+    expect($point->getCoordinates())->toEqual([1, 2, 3, 4]);
+});
+
+test('serialization', function () {
+    $coordinates = [1, 1];
+    $point = new Point($coordinates);
+
+    $expected = [
+        'type' => GeoJsonType::POINT->value,
+        'coordinates' => $coordinates,
+    ];
+
+    expect(GeoJsonType::from($point->getType()))->toBe(GeoJsonType::POINT);
+    expect($point->getCoordinates())->toBe($coordinates);
+    expect($point->jsonSerialize())->toBe($expected);
+});
+
+test('unserialization', function ($assoc) {
+    $json = <<<'JSON'
     {
-        return new Point([1, 1], ... $extraArgs);
+        "type": "Point",
+        "coordinates": [1, 1]
     }
+    JSON;
 
-    public function testIsSubclassOfGeometry(): void
-    {
-        $this->assertTrue(is_subclass_of(Point::class, Geometry::class));
-    }
+    $json = json_decode($json, $assoc);
+    
+    /** @var Point */
+    $point = GeoJson::jsonUnserialize($json);
 
-    public function testConstructorShouldRequireAtLeastTwoElementsInPosition(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Position requires at least two elements');
-
-        new Point([1]);
-    }
-
-    /**
-     * @dataProvider providePositionsWithInvalidTypes
-     */
-    public function testConstructorShouldRequireIntegerOrFloatElementsInPosition(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Position elements must be integers or floats');
-
-        new Point(func_get_args());
-    }
-
-    public function providePositionsWithInvalidTypes()
-    {
-        return [
-            'strings' => ['1.0', '2'],
-            'objects' => [new stdClass(), new stdClass()],
-            'arrays' => [[], []],
-        ];
-    }
-
-    public function testConstructorShouldAllowMoreThanTwoElementsInAPosition(): void
-    {
-        $point = new Point([1, 2, 3, 4]);
-
-        $this->assertEquals([1, 2, 3, 4], $point->getCoordinates());
-    }
-
-    public function testSerialization(): void
-    {
-        $coordinates = [1, 1];
-        $point = new Point($coordinates);
-
-        $expected = [
-            'type' => GeoJson::TYPE_POINT,
-            'coordinates' => $coordinates,
-        ];
-
-        $this->assertSame(GeoJson::TYPE_POINT, $point->getType());
-        $this->assertSame($coordinates, $point->getCoordinates());
-        $this->assertSame($expected, $point->jsonSerialize());
-    }
-
-    /**
-     * @dataProvider provideJsonDecodeAssocOptions
-     * @group functional
-     */
-    public function testUnserialization($assoc): void
-    {
-        $json = <<<'JSON'
-{
-    "type": "Point",
-    "coordinates": [1, 1]
-}
-JSON;
-
-        $json = json_decode($json, $assoc);
-        $point = GeoJson::jsonUnserialize($json);
-
-        $this->assertInstanceOf(Point::class, $point);
-        $this->assertSame(GeoJson::TYPE_POINT, $point->getType());
-        $this->assertSame([1, 1], $point->getCoordinates());
-    }
-
-    public function provideJsonDecodeAssocOptions()
-    {
-        return [
-            'assoc=true' => [true],
-            'assoc=false' => [false],
-        ];
-    }
-}
+    expect($point)->toBeInstanceOf(Point::class);
+    expect(GeoJsonType::from($point->getType()))->toBe(GeoJsonType::POINT);
+    expect($point->getCoordinates())->toBe([1, 1]);
+})
+    ->with([
+        'assoc=true' => [true],
+        'assoc=false' => [false],
+    ])
+    ->group('functional');
