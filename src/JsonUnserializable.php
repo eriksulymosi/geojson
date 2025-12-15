@@ -20,5 +20,5 @@ interface JsonUnserializable
      *
      * @throws UnserializationException
      */
-    public static function jsonUnserialize(array|object $json): self;
+    public static function jsonUnserialize(array $json): self;
 }

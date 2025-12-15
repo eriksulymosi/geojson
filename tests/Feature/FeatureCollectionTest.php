@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use GeoJson\Exception\InvalidArgumentException;
@@ -13,14 +14,12 @@ test('is subclass of geo json')
     ->expect(is_subclass_of(FeatureCollection::class, GeoJson::class))
     ->toBeTrue();
 
-test('constructor should require array of feature objects', function () {
-    $this->expectException(InvalidArgumentException::class);
-    $this->expectExceptionMessage('FeatureCollection may only contain Feature objects');
-
-    new FeatureCollection([new stdClass()]);
+test('constructor should require array of feature objects', function (): void {
+    expect(fn () => new FeatureCollection([new stdClass()]))
+        ->toThrow(InvalidArgumentException::class, 'FeatureCollection may only contain Feature objects');
 });
 
-test('constructor should reindex features array numerically', function () {
+test('constructor should reindex features array numerically', function (): void {
     $feature1 = mock(Feature::class);
     $feature2 = mock(Feature::class);
 
@@ -34,7 +33,7 @@ test('constructor should reindex features array numerically', function () {
     expect(iterator_to_array($collection))->toBe([$feature1, $feature2]);
 });
 
-test('is traversable', function () {
+test('is traversable', function (): void {
     $features = [
         mock(Feature::class),
         mock(Feature::class),
@@ -46,7 +45,7 @@ test('is traversable', function () {
     expect(iterator_to_array($collection))->toBe($features);
 });
 
-test('is countable', function () {
+test('is countable', function (): void {
     $features = [
         mock(Feature::class),
         mock(Feature::class),
@@ -58,7 +57,7 @@ test('is countable', function () {
     expect($collection)->toHaveCount(2);
 });
 
-test('serialization', function () {
+test('serialization', function (): void {
     $features = [
         mock(Feature::class),
         mock(Feature::class),
@@ -79,22 +78,22 @@ test('serialization', function () {
     expect($collection->jsonSerialize())->toBe($expected);
 });
 
-test('unserialization', function ($assoc) {
+test('unserialization', function ($assoc): void {
     $json = <<<'JSON'
-    {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "id": "test.feature.1",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [1, 1]
+        {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "id": "test.feature.1",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [1, 1]
+                    }
                 }
-            }
-        ]
-    }
-    JSON;
+            ]
+        }
+        JSON;
 
     $json = json_decode($json, $assoc);
 
@@ -125,16 +124,10 @@ test('unserialization', function ($assoc) {
     ])
     ->group('functional');
 
-test('unserialization should require features property', function () {
-    $this->expectException(UnserializationException::class);
-    $this->expectExceptionMessage('FeatureCollection expected "features" property of type array, none given');
+test('unserialization should require features property')
+    ->throws(UnserializationException::class, 'FeatureCollection expected "features" property of type array, none given')
+    ->expect(fn () => GeoJson::jsonUnserialize(['type' => GeoJsonType::FEATURE_COLLECTION->value]));
 
-    GeoJson::jsonUnserialize(['type' => GeoJsonType::FEATURE_COLLECTION->value]);
-});
-
-test('unserialization should require features array', function () {
-    $this->expectException(UnserializationException::class);
-    $this->expectExceptionMessage('FeatureCollection expected "features" property of type array');
-
-    GeoJson::jsonUnserialize(['type' => GeoJsonType::FEATURE_COLLECTION->value, 'features' => null]);
-});
+test('unserialization should require features array')
+    ->throws(UnserializationException::class, 'FeatureCollection expected "features" property of type array')
+    ->expect(fn () => GeoJson::jsonUnserialize(['type' => GeoJsonType::FEATURE_COLLECTION->value, 'features' => null]));

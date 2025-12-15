@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use GeoJson\GeoJson;
@@ -11,21 +12,21 @@ test('is subclass of geometry')
     ->expect(is_subclass_of(MultiPoint::class, Geometry::class))
     ->toBeTrue();
 
-test('construction from point objects', function () {
-    $multiPoint1 = new MultiPoint([
-        new Point([1, 1]),
-        new Point([2, 2]),
-    ]);
+test('construction from point objects')
+    ->expect(
+        new MultiPoint([
+            new Point([1, 1]),
+            new Point([2, 2]),
+        ])->getCoordinates()
+    )
+    ->toBe(
+        new MultiPoint([
+            [1, 1],
+            [2, 2],
+        ])->getCoordinates()
+    );
 
-    $multiPoint2 = new MultiPoint([
-        [1, 1],
-        [2, 2],
-    ]);
-
-    expect($multiPoint2->getCoordinates())->toBe($multiPoint1->getCoordinates());
-});
-
-test('serialization', function () {
+test('serialization', function (): void {
     $coordinates = [[1, 1], [2, 2]];
     $multiPoint = new MultiPoint($coordinates);
 
@@ -39,19 +40,19 @@ test('serialization', function () {
     expect($multiPoint->jsonSerialize())->toBe($expected);
 });
 
-test('unserialization', function ($assoc) {
+test('unserialization', function ($assoc): void {
     $json = <<<'JSON'
-    {
-        "type": "MultiPoint",
-        "coordinates": [
-            [1, 1],
-            [2, 2]
-        ]
-    }
-    JSON;
+        {
+            "type": "MultiPoint",
+            "coordinates": [
+                [1, 1],
+                [2, 2]
+            ]
+        }
+        JSON;
 
     $json = json_decode($json, $assoc);
-    
+
     /** @var MultiPoint */
     $multiPoint = GeoJson::jsonUnserialize($json);
 

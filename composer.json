@@ -18,7 +18,10 @@
         "squizlabs/php_codesniffer": "^4",
         "slevomat/coding-standard": "^8.0",
         "pestphp/pest-plugin-drift": "^4.0",
-        "mockery/mockery": "^1.6"
+        "mockery/mockery": "^1.6",
+        "friendsofphp/php-cs-fixer": "^3.91",
+        "pestphp/pest-plugin-type-coverage": "^4.0",
+        "phpstan/phpstan": "^2.1"
     },
     "autoload": {
         "psr-4": {

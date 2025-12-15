@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use GeoJson\GeoJson;
@@ -7,25 +8,25 @@ use GeoJson\Geometry\Geometry;
 use GeoJson\Geometry\MultiPolygon;
 use GeoJson\Geometry\Polygon;
 
-test('is subclass of geometry', function () {
-    expect(is_subclass_of(MultiPolygon::class, Geometry::class))->toBeTrue();
-});
+test('is subclass of geometry')
+    ->expect(is_subclass_of(MultiPolygon::class, Geometry::class))
+    ->toBeTrue();
 
-test('construction from polygon objects', function () {
-    $multiPolygon1 = new MultiPolygon([
-        new Polygon([[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]]),
-        new Polygon([[[1, 1], [1, 3], [3, 3], [3, 1], [1, 1]]]),
-    ]);
+test('construction from polygon objects')
+    ->expect(
+        new MultiPolygon([
+            new Polygon([[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]]),
+            new Polygon([[[1, 1], [1, 3], [3, 3], [3, 1], [1, 1]]]),
+        ])->getCoordinates()
+    )
+    ->toBe(
+        new MultiPolygon([
+            [[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]],
+            [[[1, 1], [1, 3], [3, 3], [3, 1], [1, 1]]],
+        ])->getCoordinates()
+    );
 
-    $multiPolygon2 = new MultiPolygon([
-        [[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]],
-        [[[1, 1], [1, 3], [3, 3], [3, 1], [1, 1]]],
-    ]);
-
-    expect($multiPolygon2->getCoordinates())->toBe($multiPolygon1->getCoordinates());
-});
-
-test('serialization', function () {
+test('serialization', function (): void {
     $coordinates = [
         [[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]],
         [[[1, 1], [1, 3], [3, 3], [3, 1], [1, 1]]],
@@ -43,19 +44,19 @@ test('serialization', function () {
     expect($multiPolygon->jsonSerialize())->toBe($expected);
 });
 
-test('unserialization', function ($assoc) {
+test('unserialization', function ($assoc): void {
     $json = <<<'JSON'
-    {
-        "type": "MultiPolygon",
-        "coordinates": [
-            [ [ [0, 0], [0, 4], [4, 4], [4, 0], [0, 0] ] ],
-            [ [ [1, 1], [1, 3], [3, 3], [3, 1], [1, 1] ] ]
-        ]
-    }
-    JSON;
+        {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [ [ [0, 0], [0, 4], [4, 4], [4, 0], [0, 0] ] ],
+                [ [ [1, 1], [1, 3], [3, 3], [3, 1], [1, 1] ] ]
+            ]
+        }
+        JSON;
 
     $json = json_decode($json, $assoc);
-    
+
     /** @var MultiPolygon */
     $multiPolygon = GeoJson::jsonUnserialize($json);
 

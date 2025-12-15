@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace GeoJson\Geometry;
 
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
-
 use GeoJson\GeoJsonType;
+
 use function array_map;
 
 /**
@@ -23,14 +22,14 @@ class MultiLineString extends Geometry
     protected GeoJsonType $type = GeoJsonType::MULTI_LINE_STRING;
 
     /**
-     * @param array<LineString|array<Point|array<int|float>>> $lineStrings
-     * @param CoordinateReferenceSystem|BoundingBox $args
+     * @param array<array<array<float|int>|Point>|LineString> $lineStrings
+     * @param BoundingBox                                     $args
      */
     public function __construct(array $lineStrings, ...$args)
     {
         $this->coordinates = array_map(
             static function ($lineString) {
-                if (! $lineString instanceof LineString) {
+                if (!$lineString instanceof LineString) {
                     $lineString = new LineString($lineString);
                 }
 

@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace GeoJson\Geometry;
 
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\Exception\InvalidArgumentException;
 
+use function array_first;
+use function array_last;
 use function count;
-use function end;
-use function reset;
 
 /**
  * LinearRing is a special kind of LineString geometry object.
@@ -24,8 +23,8 @@ use function reset;
 class LinearRing extends LineString
 {
     /**
-     * @param array<Point|array<int|float>> $positions
-     * @param CoordinateReferenceSystem|BoundingBox $args
+     * @param array<array<float|int>|Point> $positions
+     * @param BoundingBox                   $args
      */
     public function __construct(array $positions, ...$args)
     {
@@ -33,8 +32,8 @@ class LinearRing extends LineString
             throw new InvalidArgumentException('LinearRing requires at least four positions');
         }
 
-        $lastPosition = end($positions);
-        $firstPosition = reset($positions);
+        $lastPosition = array_last($positions);
+        $firstPosition = array_first($positions);
 
         $lastPosition = $lastPosition instanceof Point ? $lastPosition->getCoordinates() : $lastPosition;
         $firstPosition = $firstPosition instanceof Point ? $firstPosition->getCoordinates() : $firstPosition;
@@ -43,6 +42,6 @@ class LinearRing extends LineString
             throw new InvalidArgumentException('LinearRing requires the first and last positions to be equivalent');
         }
 
-        parent::__construct($positions, ... $args);
+        parent::__construct($positions, ...$args);
     }
 }

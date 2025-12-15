@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GeoJson\Feature;
 
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\GeoJson;
 use GeoJson\GeoJsonType;
 use GeoJson\Geometry\Geometry;
@@ -35,13 +34,13 @@ class Feature extends GeoJson
      *
      * @see https://www.rfc-editor.org/rfc/rfc7946#section-3.2
      *
-     * @var int|string|null
+     * @var null|int|string
      */
     protected $id;
 
     /**
-     * @param int|string|null $id
-     * @param CoordinateReferenceSystem|BoundingBox $args
+     * @param null|int|string $id
+     * @param BoundingBox     $args
      */
     public function __construct(?Geometry $geometry = null, ?array $properties = null, $id = null, ...$args)
     {
@@ -63,9 +62,9 @@ class Feature extends GeoJson
     /**
      * Return the identifier for this Feature object.
      *
-     * @return int|string|null
+     * @return null|int|string
      */
-    public function getId()
+    public function getId(): int|string|null
     {
         return $this->id;
     }
@@ -82,11 +81,11 @@ class Feature extends GeoJson
     {
         $json = parent::jsonSerialize();
 
-        $json['geometry'] = isset($this->geometry) ? $this->geometry->jsonSerialize() : null;
+        $json['geometry'] = $this->geometry?->jsonSerialize();
         $json['properties'] = $this->properties ?? null;
 
         // Ensure empty associative arrays are encoded as JSON objects
-        if ($json['properties'] === []) {
+        if ([] === $json['properties']) {
             $json['properties'] = new stdClass();
         }
 

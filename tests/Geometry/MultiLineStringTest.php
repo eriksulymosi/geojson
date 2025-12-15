@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use GeoJson\GeoJson;
@@ -11,21 +12,21 @@ test('is subclass of geometry')
     ->expect(is_subclass_of(MultiLineString::class, Geometry::class))
     ->toBeTrue();
 
-test('construction from line string objects', function () {
-    $multiLineString1 = new MultiLineString([
-        new LineString([[1, 1], [2, 2]]),
-        new LineString([[3, 3], [4, 4]]),
-    ]);
+test('construction from line string objects')
+    ->expect(
+        new MultiLineString([
+            new LineString([[1, 1], [2, 2]]),
+            new LineString([[3, 3], [4, 4]]),
+        ])->getCoordinates()
+    )
+    ->toBe(
+        new MultiLineString([
+            [[1, 1], [2, 2]],
+            [[3, 3], [4, 4]],
+        ])->getCoordinates()
+    );
 
-    $multiLineString2 = new MultiLineString([
-        [[1, 1], [2, 2]],
-        [[3, 3], [4, 4]],
-    ]);
-
-    expect($multiLineString2->getCoordinates())->toBe($multiLineString1->getCoordinates());
-});
-
-test('serialization', function () {
+test('serialization', function (): void {
     $coordinates = [
         [[1, 1], [2, 2]],
         [[3, 3], [4, 4]],
@@ -43,19 +44,19 @@ test('serialization', function () {
     expect($multiLineString->jsonSerialize())->toBe($expected);
 });
 
-test('unserialization', function ($assoc) {
+test('unserialization', function ($assoc): void {
     $json = <<<'JSON'
-    {
-        "type": "MultiLineString",
-        "coordinates": [
-            [ [1, 1], [2, 2] ],
-            [ [3, 3], [4, 4] ]
-        ]
-    }
-    JSON;
+        {
+            "type": "MultiLineString",
+            "coordinates": [
+                [ [1, 1], [2, 2] ],
+                [ [3, 3], [4, 4] ]
+            ]
+        }
+        JSON;
 
     $json = json_decode($json, $assoc);
-    
+
     /** @var MultiLineString */
     $multiLineString = GeoJson::jsonUnserialize($json);
 

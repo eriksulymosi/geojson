@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use GeoJson\Exception\InvalidArgumentException;
@@ -7,18 +8,15 @@ use GeoJson\GeoJsonType;
 use GeoJson\Geometry\LineString;
 use GeoJson\Geometry\MultiPoint;
 
-test('is subclass of multi point', function () {
-    expect(is_subclass_of(LineString::class, MultiPoint::class))->toBeTrue();
-});
+test('is subclass of multi point')
+    ->expect(is_subclass_of(LineString::class, MultiPoint::class))
+    ->toBeTrue();
 
-test('constructor should require at least two positions', function () {
-    $this->expectException(InvalidArgumentException::class);
-    $this->expectExceptionMessage('LineString requires at least two positions');
+test('constructor should require at least two positions')
+    ->throws(InvalidArgumentException::class, 'LineString requires at least two positions')
+    ->expect(fn () => new LineString([[1, 1]]));
 
-    new LineString([[1, 1]]);
-});
-
-test('serialization', function () {
+test('serialization', function (): void {
     $coordinates = [[1, 1], [2, 2]];
     $lineString = new LineString($coordinates);
 
@@ -32,19 +30,19 @@ test('serialization', function () {
     expect($lineString->jsonSerialize())->toBe($expected);
 });
 
-test('unserialization', function ($assoc) {
+test('unserialization', function ($assoc): void {
     $json = <<<'JSON'
-    {
-        "type": "LineString",
-        "coordinates": [
-            [1, 1],
-            [2, 2]
-        ]
-    }
-    JSON;
+        {
+            "type": "LineString",
+            "coordinates": [
+                [1, 1],
+                [2, 2]
+            ]
+        }
+        JSON;
 
     $json = json_decode($json, $assoc);
-    
+
     /** @var LineString */
     $lineString = GeoJson::jsonUnserialize($json);
 

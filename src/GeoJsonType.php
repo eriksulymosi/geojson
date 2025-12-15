@@ -1,9 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace GeoJson;
 
-use Stringable;
+use function sprintf;
 
 enum GeoJsonType: string
 {
@@ -16,4 +17,15 @@ enum GeoJsonType: string
     case FEATURE = 'Feature';
     case FEATURE_COLLECTION = 'FeatureCollection';
     case GEOMETRY_COLLECTION = 'GeometryCollection';
+
+    public function getTypedClassFullName(): string
+    {
+        $classNamespace = match ($this) {
+            self::FEATURE,
+            self::FEATURE_COLLECTION => 'Feature',
+            default => 'Geometry'
+        };
+
+        return sprintf('GeoJson\%s\%s', $classNamespace, $this->value);
+    }
 }

@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace GeoJson\Geometry;
 
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
-
 use GeoJson\GeoJsonType;
+
 use function array_map;
 
 /**
@@ -23,14 +22,14 @@ class MultiPoint extends Geometry
     protected GeoJsonType $type = GeoJsonType::MULTI_POINT;
 
     /**
-     * @param array<Point|array<float|int>> $positions
-     * @param CoordinateReferenceSystem|BoundingBox $args
+     * @param array<array<float|int>|Point> $positions
+     * @param BoundingBox                   $args
      */
     public function __construct(array $positions, ...$args)
     {
         $this->coordinates = array_map(
             static function ($point) {
-                if (! $point instanceof Point) {
+                if (!$point instanceof Point) {
                     $point = new Point($point);
                 }
 

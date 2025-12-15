@@ -1,52 +1,41 @@
 <?php
+
 declare(strict_types=1);
 
 use GeoJson\BoundingBox;
 use GeoJson\Exception\InvalidArgumentException;
-use GeoJson\Exception\UnserializationException;
 use GeoJson\JsonUnserializable;
 
-test('is json serializable', function () {
-    expect(new BoundingBox([0, 0, 1, 1]))->toBeInstanceOf('JsonSerializable');
-});
+test('is json serializable')
+    ->expect(new BoundingBox([0, 0, 1, 1]))
+    ->toBeInstanceOf('JsonSerializable');
 
-test('is json unserializable', function () {
-    expect(new BoundingBox([0, 0, 1, 1]))->toBeInstanceOf(JsonUnserializable::class);
-});
+test('is json unserializable')
+    ->expect(new BoundingBox([0, 0, 1, 1]))
+    ->toBeInstanceOf(JsonUnserializable::class);
 
-test('constructor should require at least four values', function () {
-    $this->expectException(InvalidArgumentException::class);
-    $this->expectExceptionMessage('BoundingBox requires at least four values');
+test('constructor should require at least four values')
+    ->throws(InvalidArgumentException::class, 'BoundingBox requires at least four values')
+    ->expect(fn () => new BoundingBox([0, 0]));
 
-    new BoundingBox([0, 0]);
-});
+test('constructor should require an even number of values')
+    ->throws(InvalidArgumentException::class, 'BoundingBox requires an even number of values')
+    ->expect(fn () => new BoundingBox([0, 0, 1, 1, 2]));
 
-test('constructor should require an even number of values', function () {
-    $this->expectException(InvalidArgumentException::class);
-    $this->expectExceptionMessage('BoundingBox requires an even number of values');
-
-    new BoundingBox([0, 0, 1, 1, 2]);
-});
-
-test('constructor should require integer or float values', function () {
-    $this->expectException(InvalidArgumentException::class);
-    $this->expectExceptionMessage('BoundingBox values must be integers or floats');
-    new BoundingBox(func_get_args());
-})
+test('constructor should require integer or float values')
     ->with([
         'strings' => ['0', '0.0', '1', '1.0'],
         'objects' => [new stdClass(), new stdClass(), new stdClass(), new stdClass()],
         'arrays' => [[], [], [], []],
-    ]);
+    ])
+    ->throws(InvalidArgumentException::class, 'BoundingBox values must be integers or floats')
+    ->expect(fn (...$bounds) => new BoundingBox($bounds));
 
-test('constructor should require min before max values', function () {
-    $this->expectException(InvalidArgumentException::class);
-    $this->expectExceptionMessage('BoundingBox min values must precede max values');
+test('constructor should require min before max values')
+    ->throws(InvalidArgumentException::class, 'BoundingBox min values must precede max values')
+    ->expect(fn () => new BoundingBox([-90.0, -95.0, -92.5, 90.0]));
 
-    new BoundingBox([-90.0, -95.0, -92.5, 90.0]);
-});
-
-test('serialization', function () {
+test('serialization', function (): void {
     $bounds = [-180.0, -90.0, 0.0, 180.0, 90.0, 100.0];
     $boundingBox = new BoundingBox($bounds);
 
@@ -54,7 +43,7 @@ test('serialization', function () {
     expect($boundingBox->jsonSerialize())->toBe($bounds);
 });
 
-test('unserialization', function ($assoc) {
+test('unserialization', function ($assoc): void {
     $json = '[-180.0, -90.0, 180.0, 90.0]';
 
     $json = json_decode($json, $assoc);
@@ -69,16 +58,12 @@ test('unserialization', function ($assoc) {
     ])
     ->group('functional');
 
-test('unserialization should require array', function ($value) {
-    $this->expectException(UnserializationException::class);
-    $this->expectExceptionMessage('BoundingBox expected value of type array');
-
-    BoundingBox::jsonUnserialize($value);
-})
+test('unserialization should require array')
     ->with([
-        [null],
-        [1],
-        ['foo'],
-        [new stdClass()],
-    ]);
-
+        null,
+        1,
+        'foo',
+        new stdClass(),
+    ])
+    ->throws(TypeError::class)
+    ->expect(fn ($json) => BoundingBox::jsonUnserialize($json));

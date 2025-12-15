@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use GeoJson\Feature\Feature;
@@ -11,7 +12,7 @@ test('is subclass of geo json')
     ->expect(is_subclass_of(Feature::class, GeoJson::class))
     ->toBeTrue();
 
-test('serialization', function () {
+test('serialization', function (): void {
     $geometry = mock(Geometry::class);
 
     $geometry->shouldReceive('jsonSerialize')->andReturn(['geometry']);
@@ -35,19 +36,15 @@ test('serialization', function () {
     expect($feature->jsonSerialize())->toBe($expected);
 });
 
-test('serialization with null constructor arguments', function () {
-    $feature = new Feature();
-
-    $expected = [
+test('serialization with null constructor arguments')
+    ->expect(new Feature()->jsonSerialize())
+    ->toBe([
         'type' => GeoJsonType::FEATURE->value,
         'geometry' => null,
         'properties' => null,
-    ];
+    ]);
 
-    expect($feature->jsonSerialize())->toBe($expected);
-});
-
-test('serialization should convert empty properties array to object', function () {
+test('serialization should convert empty properties array to object', function (): void {
     $feature = new Feature(null, []);
 
     $expected = [
@@ -59,23 +56,23 @@ test('serialization should convert empty properties array to object', function (
     expect($feature->jsonSerialize())->toEqual($expected);
 });
 
-test('unserialization', function ($assoc) {
+test('unserialization', function ($assoc): void {
     $json = <<<'JSON'
-    {
-        "type": "Feature",
-        "id": "test.feature.1",
-        "properties": {
-            "key": "value"
-        },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [1, 1]
+        {
+            "type": "Feature",
+            "id": "test.feature.1",
+            "properties": {
+                "key": "value"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1, 1]
+            }
         }
-    }
-    JSON;
+        JSON;
 
     $json = json_decode($json, $assoc);
-    
+
     /** @var Feature */
     $feature = GeoJson::jsonUnserialize($json);
 
@@ -95,4 +92,3 @@ test('unserialization', function ($assoc) {
         'assoc=false' => [false],
     ])
     ->group('functional');
-

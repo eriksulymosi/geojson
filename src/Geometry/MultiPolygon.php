@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace GeoJson\Geometry;
 
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
-
 use GeoJson\GeoJsonType;
+
 use function array_map;
 
 /**
@@ -23,14 +22,14 @@ class MultiPolygon extends Geometry
     protected GeoJsonType $type = GeoJsonType::MULTI_POLYGON;
 
     /**
-     * @param array<Polygon|array<LinearRing|array<Point|array<int|float>>>> $polygons
-     * @param CoordinateReferenceSystem|BoundingBox $args
+     * @param array<array<array<array<float|int>|Point>|LinearRing>|Polygon> $polygons
+     * @param BoundingBox                                                    $args
      */
     public function __construct(array $polygons, ...$args)
     {
         $this->coordinates = array_map(
             static function ($polygon) {
-                if (! $polygon instanceof Polygon) {
+                if (!$polygon instanceof Polygon) {
                     $polygon = new Polygon($polygon);
                 }
 

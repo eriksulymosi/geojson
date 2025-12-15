@@ -7,7 +7,6 @@ namespace GeoJson\Feature;
 use ArrayIterator;
 use Countable;
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\Exception\InvalidArgumentException;
 use GeoJson\GeoJson;
 use GeoJson\GeoJsonType;
@@ -15,7 +14,6 @@ use IteratorAggregate;
 use Traversable;
 
 use function array_map;
-use function array_merge;
 use function array_values;
 use function count;
 
@@ -36,12 +34,12 @@ class FeatureCollection extends GeoJson implements Countable, IteratorAggregate
 
     /**
      * @param array<Feature> $features
-     * @param CoordinateReferenceSystem|BoundingBox $args
+     * @param BoundingBox    $args
      */
     public function __construct(array $features, ...$args)
     {
         foreach ($features as $feature) {
-            if (! $feature instanceof Feature) {
+            if (!$feature instanceof Feature) {
                 throw new InvalidArgumentException('FeatureCollection may only contain Feature objects');
             }
         }
@@ -73,12 +71,12 @@ class FeatureCollection extends GeoJson implements Countable, IteratorAggregate
 
     public function jsonSerialize(): array
     {
-        return array_merge(
-            parent::jsonSerialize(),
-            ['features' => array_map(
-                static fn(Feature $feature) => $feature->jsonSerialize(),
+        return [
+            ...parent::jsonSerialize(),
+            'features' => array_map(
+                static fn (Feature $feature) => $feature->jsonSerialize(),
                 $this->features
-            )]
-        );
+            ),
+        ];
     }
 }

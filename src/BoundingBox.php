@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace GeoJson;
 
 use GeoJson\Exception\InvalidArgumentException;
-use GeoJson\Exception\UnserializationException;
 use JsonSerializable;
 
 use function count;
-use function is_array;
 use function is_float;
 use function is_int;
 
@@ -42,12 +40,12 @@ class BoundingBox implements JsonSerializable, JsonUnserializable
         }
 
         foreach ($bounds as $value) {
-            if (! is_int($value) && ! is_float($value)) {
+            if (!is_int($value) && !is_float($value)) {
                 throw new InvalidArgumentException('BoundingBox values must be integers or floats');
             }
         }
 
-        for ($i = 0; $i < $count / 2; $i++) {
+        for ($i = 0; $i < $count / 2; ++$i) {
             if ($bounds[$i] > $bounds[$i + $count / 2]) {
                 throw new InvalidArgumentException('BoundingBox min values must precede max values');
             }
@@ -71,15 +69,8 @@ class BoundingBox implements JsonSerializable, JsonUnserializable
         return $this->bounds;
     }
 
-    /**
-     * @param array $json
-     */
-    final public static function jsonUnserialize($json): self
+    final public static function jsonUnserialize(array $json): self
     {
-        if (! is_array($json)) {
-            throw UnserializationException::invalidValue('BoundingBox', $json, 'array');
-        }
-
         return new self($json);
     }
 }

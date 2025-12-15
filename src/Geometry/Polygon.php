@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GeoJson\Geometry;
 
 use GeoJson\BoundingBox;
-use GeoJson\CoordinateReferenceSystem\CoordinateReferenceSystem;
 use GeoJson\GeoJsonType;
 
 /**
@@ -21,13 +20,13 @@ class Polygon extends Geometry
     protected GeoJsonType $type = GeoJsonType::POLYGON;
 
     /**
-     * @param array<LinearRing|array<Point|array<int|float>>> $linearRings
-     * @param CoordinateReferenceSystem|BoundingBox $args
+     * @param array<array<array<float|int>|Point>|LinearRing> $linearRings
+     * @param BoundingBox                                     $args
      */
     public function __construct(array $linearRings, ...$args)
     {
         foreach ($linearRings as $linearRing) {
-            if (! $linearRing instanceof LinearRing) {
+            if (!$linearRing instanceof LinearRing) {
                 $linearRing = new LinearRing($linearRing);
             }
             $this->coordinates[] = $linearRing->getCoordinates();
