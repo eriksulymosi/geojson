@@ -11,11 +11,11 @@ Classes also exist for bounding boxes and coordinate reference systems.
 ## Installation
 
 The library is published as a
-[package](https://packagist.org/packages/jmikola/geojson) and is installable via
+[package](https://packagist.org/packages/eriksulymosi/geojson) and is installable via
 [Composer](https://getcomposer.org/):
 
 ```
-$ composer require "jmikola/geojson=^1.0"
+$ composer require "eriksulymosi/geojson"
 ```
 
 ## Usage
@@ -41,9 +41,9 @@ respective types.
 
 #### Specifying a Bounding Box
 
-All GeoJson constructors support `BoundingBox` and `CoordinateReferenceSystem`
-objects as optional arguments beyond those explicitly listed in their prototype.
-These objects may appear in any order *after* the explicit arguments.
+All GeoJson constructors support `BoundingBox` objects as optional arguments
+beyond those explicitly listed in their prototype. These objects may appear in
+any order *after* the explicit arguments.
 
 ```php
 $box = new \GeoJson\BoundingBox([-180, -90, 180, 90]);

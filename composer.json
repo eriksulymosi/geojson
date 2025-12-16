@@ -1,16 +1,16 @@
 {
-    "name": "jmikola/geojson",
+    "name": "eriksulymosi/geojson",
     "type": "library",
     "description": "GeoJSON implementation for PHP",
     "keywords": ["geo", "geospatial", "geojson"],
-    "homepage": "https://github.com/jmikola/geojson",
+    "homepage": "https://github.com/eriksulymosi/geojson",
     "license": "MIT",
     "authors": [
         { "name": "Jeremy Mikola", "email": "jmikola@gmail.com" },
         { "name": "Erik Sulymosi", "email": "erik.sulymosi@gmail.com" }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.5",
         "ext-json": "*"
     },
     "require-dev": {
